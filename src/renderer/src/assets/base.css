@@ -1,0 +1,98 @@
+:root {
+  font-family: 'DM Sans', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  color: #202020;
+  background: #fafafa;
+  --canvas: #fafafa;
+  --surface: #ffffff;
+  --surface-subtle: #fcfcfc;
+  --surface-hover: #f1f1f1;
+  --sidebar: #f3f3f3;
+  --line: #e7e7e7;
+  --line-strong: #d4d4d4;
+  --text: #202020;
+  --text-soft: #626262;
+  --text-muted: #767676;
+  --accent: #242424;
+  --accent-strong: #080808;
+  --accent-foreground: #ffffff;
+  --accent-soft: #e8e8e8;
+  --accent-faint: #f3f3f3;
+  --notice: #626262;
+  --notice-soft: #f3f3f3;
+  --focus-ring: #777777;
+  --shadow: 0 10px 32px rgba(0, 0, 0, 0.09);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color: #eeeeee;
+  background: #181818;
+  --canvas: #181818;
+  --surface: #202020;
+  --surface-subtle: #242424;
+  --surface-hover: #2e2e2e;
+  --sidebar: #141414;
+  --line: #303030;
+  --line-strong: #454545;
+  --text: #eeeeee;
+  --text-soft: #b7b7b7;
+  --text-muted: #949494;
+  --accent: #e5e5e5;
+  --accent-strong: #ffffff;
+  --accent-foreground: #181818;
+  --accent-soft: #333333;
+  --accent-faint: #282828;
+  --notice: #b7b7b7;
+  --notice-soft: #282828;
+  --focus-ring: #a3a3a3;
+  --shadow: 0 14px 40px rgba(0, 0, 0, 0.38);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 760px;
+  height: 100%;
+  min-height: 560px;
+  margin: 0;
+}
+body {
+  overflow: hidden;
+  background: var(--canvas);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  color: inherit;
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+::selection {
+  color: var(--text);
+  background: var(--accent-soft);
+}
