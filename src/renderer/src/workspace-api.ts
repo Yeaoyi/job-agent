@@ -1,4 +1,5 @@
 import type { Workspace, WorkspaceAPI } from '../../shared/data'
+import { emptyResume } from '../../shared/resume'
 
 const previewKey = 'job-agent.preview-workspace.v1'
 let preview: Workspace | null = null
@@ -13,19 +14,19 @@ const browserPreview: WorkspaceAPI = {
   async load(legacy) {
     if (preview) return preview
     const saved = localStorage.getItem(previewKey)
-    if (saved) return store(JSON.parse(saved) as Workspace)
+    if (saved) {
+      const loaded = JSON.parse(saved) as Workspace
+      return store({
+        ...loaded,
+        resume: { ...emptyResume, ...loaded.resume },
+        resumeDocuments: loaded.resumeDocuments ?? []
+      })
+    }
     return store({
       version: 1,
       companies: legacy.companies ?? [],
-      resume: legacy.resume ?? {
-        name: '',
-        targetRole: '',
-        city: '',
-        email: '',
-        summary: '',
-        experience: '',
-        skills: ''
-      },
+      resume: { ...emptyResume, ...legacy.resume },
+      resumeDocuments: [],
       resumeVersions: [],
       applicationIntents: []
     })
@@ -74,6 +75,21 @@ const browserPreview: WorkspaceAPI = {
   },
   async backup() {
     throw new Error('请在 Electron 桌面应用内导出备份。')
+  },
+  async importResume() {
+    throw new Error('请在 Electron 桌面应用内选择并解析简历文件。')
+  },
+  async saveResumeReview() {
+    throw new Error('请在 Electron 桌面应用内保存校对。')
+  },
+  async confirmResumeReview() {
+    throw new Error('请在 Electron 桌面应用内确认校对。')
+  },
+  async openResumeOriginal() {
+    throw new Error('请在 Electron 桌面应用内打开原文件。')
+  },
+  async deleteResumeDocument() {
+    throw new Error('请在 Electron 桌面应用内管理简历文件。')
   },
   async restore() {
     throw new Error('请在 Electron 桌面应用内恢复备份。')

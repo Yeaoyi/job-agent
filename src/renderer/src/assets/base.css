@@ -26,6 +26,9 @@
   --notice: #626262;
   --notice-soft: #f3f3f3;
   --focus-ring: #777777;
+  --status-ready: #238653;
+  --status-error: #cb4545;
+  --status-loading: #858585;
   --shadow: 0 10px 32px rgba(0, 0, 0, 0.09);
   color-scheme: light;
 }
@@ -51,6 +54,9 @@
   --notice: #b7b7b7;
   --notice-soft: #282828;
   --focus-ring: #a3a3a3;
+  --status-ready: #4fc38a;
+  --status-error: #ed7777;
+  --status-loading: #949494;
   --shadow: 0 14px 40px rgba(0, 0, 0, 0.38);
   color-scheme: dark;
 }
@@ -75,6 +81,34 @@ body {
   color: var(--text);
   font-size: 13px;
   line-height: 1.5;
+}
+
+/* Theme changes should feel like one coordinated surface transition. */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    box-shadow,
+    fill,
+    stroke,
+    outline-color,
+    text-decoration-color,
+    caret-color !important;
+  transition-duration: 320ms !important;
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition-duration: 1ms !important;
+  }
 }
 button,
 input,

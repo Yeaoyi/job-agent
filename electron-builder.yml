@@ -3,6 +3,8 @@ productName: job-agent
 directories:
   buildResources: build
 files:
+  - '!.verification/**'
+  - '!tests/**'
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'

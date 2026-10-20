@@ -15,7 +15,6 @@ import {
   Check,
   CircleHelp,
   FilePenLine,
-  FileText,
   FileUp,
   Link2,
   MapPin,
@@ -33,6 +32,8 @@ import {
   X
 } from 'lucide-react'
 import IndustryFilter from './components/IndustryFilter'
+import ResumeUpload, { type ReviewDraft } from './components/ResumeUpload'
+import { emptyResume } from '../../shared/resume'
 import type { Company, Job, ResumeData, Workspace } from '../../shared/data'
 import { dataAPI } from './workspace-api'
 
@@ -115,16 +116,6 @@ const starterCompanies: Company[] = [
   }
 ]
 
-const emptyResume: ResumeData = {
-  name: '',
-  targetRole: '',
-  city: '',
-  email: '',
-  summary: '',
-  experience: '',
-  skills: ''
-}
-
 const defaultPreferences: Preferences = {
   localOnly: true,
   protectSensitiveFields: true,
@@ -156,9 +147,25 @@ function App(): ReactNode {
   )
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [dataReady, setDataReady] = useState(false)
+  const [initializationError, setInitializationError] = useState('')
+  const agentStatus = initializationError ? 'error' : dataReady ? 'ready' : 'loading'
+  const agentStatusLabel = initializationError
+    ? 'Agent 未就绪'
+    : dataReady
+      ? 'Agent 就绪'
+      : 'Agent 初始化中'
+  const agentStatusDescription = initializationError
+    ? `本地工作区加载失败：${initializationError}`
+    : dataReady
+      ? '本地工作区已就绪；AI 分析与自动网申尚未接入。'
+      : '正在加载本地工作区，请稍候。'
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [editingJob, setEditingJob] = useState<{ companyId: string; job: Job } | null>(null)
   const [theme, setTheme] = useState<Theme>(() => readSaved(themeKey, 'system'))
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+  const resolvedTheme = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme
   const [resume, setResume] = useState<ResumeData>(() => readSaved(resumeKey, emptyResume))
   const [preferences, setPreferences] = useState<Preferences>(() => ({
     ...defaultPreferences,
@@ -170,12 +177,15 @@ function App(): ReactNode {
   const [isJobDetailClosing, setIsJobDetailClosing] = useState(false)
   const [applyJob, setApplyJob] = useState<SelectedJob | null>(null)
   const [toast, setToast] = useState('')
-  const [resumeFileName, setResumeFileName] = useState('')
+  const [resumeBusy, setResumeBusy] = useState(false)
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, ReviewDraft>>({})
+  const [reviewDocumentId, setReviewDocumentId] = useState('')
   const [savedResume, setSavedResume] = useState(false)
   const [sidebarHovered, setSidebarHovered] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
-  const resumeInput = useRef<HTMLInputElement>(null)
   const jobDetailCloseTimer = useRef<number | null>(null)
+  const themeTransitionTimer = useRef<number | null>(null)
+  const themeInitialized = useRef(false)
   const requestedPage = useRef<Page>('companies')
 
   const navigateTo = (nextPage: Page): void => {
@@ -200,14 +210,29 @@ function App(): ReactNode {
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const update = (event: MediaQueryListEvent): void => setSystemDark(event.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
     const update = (): void => {
-      document.documentElement.dataset.theme =
-        theme === 'system' ? (media.matches ? 'dark' : 'light') : theme
+      const root = document.documentElement
+      if (themeInitialized.current && root.dataset.theme !== resolvedTheme) {
+        if (themeTransitionTimer.current !== null) {
+          window.clearTimeout(themeTransitionTimer.current)
+        }
+        root.classList.add('theme-transitioning')
+        themeTransitionTimer.current = window.setTimeout(() => {
+          root.classList.remove('theme-transitioning')
+          themeTransitionTimer.current = null
+        }, 360)
+      }
+      root.dataset.theme = resolvedTheme
+      themeInitialized.current = true
     }
     update()
-    if (theme === 'system') media.addEventListener('change', update)
-    return () => media.removeEventListener('change', update)
-  }, [theme])
+  }, [resolvedTheme])
 
   useEffect(() => {
     let active = true
@@ -220,12 +245,17 @@ function App(): ReactNode {
         if (!active) return
         setWorkspace(loaded)
         setCompanies(loaded.companies)
-        setResume(readSaved(resumeDraftKey, loaded.resume))
+        setResume({ ...emptyResume, ...readSaved(resumeDraftKey, loaded.resume) })
         localStorage.removeItem(companiesKey)
         localStorage.removeItem(resumeKey)
         setDataReady(true)
       })
-      .catch((error) => setToast(`加载本地数据失败：${errorMessage(error)}`))
+      .catch((error) => {
+        if (!active) return
+        const message = errorMessage(error)
+        setInitializationError(message)
+        setToast(`加载本地数据失败：${message}`)
+      })
     return () => {
       active = false
     }
@@ -246,6 +276,10 @@ function App(): ReactNode {
       if (jobDetailCloseTimer.current !== null) {
         window.clearTimeout(jobDetailCloseTimer.current)
       }
+      if (themeTransitionTimer.current !== null) {
+        window.clearTimeout(themeTransitionTimer.current)
+      }
+      document.documentElement.classList.remove('theme-transitioning')
     },
     []
   )
@@ -475,14 +509,6 @@ function App(): ReactNode {
     setSavedResume(false)
   }
 
-  const chooseResume = (event: ChangeEvent<HTMLInputElement>): void => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    setResumeFileName(file.name)
-    setToast(`已选择 ${file.name}。当前版本尚未解析或持久化文件内容。`)
-  }
-
   const openJobDetails = (selection: SelectedJob): void => {
     if (jobDetailCloseTimer.current !== null) {
       window.clearTimeout(jobDetailCloseTimer.current)
@@ -559,8 +585,13 @@ function App(): ReactNode {
               <Pin size={15} />
             </button>
           </div>
-          <div className="sidebar-version">
-            <span className="online-dot" />
+          <div
+            className="sidebar-version"
+            data-agent-status={agentStatus}
+            title={`${agentStatusLabel} · ${agentStatusDescription}`}
+            aria-label={`${agentStatusLabel} · 初步体验版 0.1`}
+          >
+            <span className="online-dot" aria-hidden="true" />
             <span className="sidebar-version-label">初步体验版</span>
             <span className="sidebar-version-number">0.1</span>
           </div>
@@ -575,18 +606,38 @@ function App(): ReactNode {
             <strong>{pageTitle(page)}</strong>
           </div>
           <div className="topbar-right">
-            <span className="agent-state">
-              <span className="state-dot" /> Agent 就绪
-            </span>
-            <span className="topbar-divider" />
-            <button
-              className="icon-button"
-              title="帮助"
-              aria-label="帮助"
-              onClick={() => setToast('帮助与使用说明将在后续版本补充。')}
+            <span
+              className="agent-state"
+              data-agent-status={agentStatus}
+              title={agentStatusDescription}
+              role="status"
             >
-              <CircleHelp size={17} />
-            </button>
+              <span className="state-dot" aria-hidden="true" /> {agentStatusLabel}
+            </span>
+            <span className="topbar-divider" aria-hidden="true" />
+            <div className="topbar-actions">
+              <button
+                className="icon-button"
+                type="button"
+                title={`当前：${resolvedTheme === 'dark' ? '夜间' : '日间'}${theme === 'system' ? '（跟随系统）' : ''} · 切换为${resolvedTheme === 'dark' ? '日间' : '夜间'}模式`}
+                aria-label={`切换为${resolvedTheme === 'dark' ? '日间' : '夜间'}模式`}
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              >
+                {resolvedTheme === 'dark' ? (
+                  <Moon size={17} aria-hidden="true" />
+                ) : (
+                  <Sun size={17} aria-hidden="true" />
+                )}
+              </button>
+              <button
+                className="icon-button"
+                title="帮助"
+                aria-label="帮助"
+                onClick={() => setToast('帮助与使用说明将在后续版本补充。')}
+              >
+                <CircleHelp size={17} />
+              </button>
+            </div>
           </div>
         </header>
 
@@ -835,6 +886,12 @@ function App(): ReactNode {
                     placeholder="例如：杭州、上海"
                   />
                   <TextField
+                    label="联系电话"
+                    value={resume.phone}
+                    onChange={(value) => updateResume('phone', value)}
+                    placeholder="填写联系电话"
+                  />
+                  <TextField
                     label="联系邮箱"
                     value={resume.email}
                     onChange={(value) => updateResume('email', value)}
@@ -846,6 +903,14 @@ function App(): ReactNode {
                     value={resume.summary}
                     onChange={(value) => updateResume('summary', value)}
                     placeholder="用几句话概括你的方向、优势与求职目标"
+                    multiline
+                  />
+                  <TextField
+                    wide
+                    label="教育经历"
+                    value={resume.education}
+                    onChange={(value) => updateResume('education', value)}
+                    placeholder="填写学校、专业、学历和就读时间"
                     multiline
                   />
                   <TextField
@@ -897,7 +962,7 @@ function App(): ReactNode {
                       <button
                         className="button button-subtle"
                         onClick={() => {
-                          setResume({ ...version.data })
+                          setResume({ ...emptyResume, ...version.data })
                           setSavedResume(false)
                           setToast('已载入历史版本，保存后才会写入当前资料。')
                         }}
@@ -924,62 +989,23 @@ function App(): ReactNode {
           )}
 
           {page === 'resume-upload' && (
-            <section className="content narrow-content">
-              <div className="page-heading">
-                <div>
-                  <div className="eyebrow">简历文件</div>
-                  <h1>简历上传</h1>
-                  <p>选择现有简历，作为后续解析与岗位匹配的输入。</p>
-                </div>
-              </div>
-              <div className="upload-panel">
-                <input
-                  ref={resumeInput}
-                  className="visually-hidden"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={chooseResume}
-                />
-                <div className="upload-icon">
-                  <FileText size={22} />
-                </div>
-                <h2>{resumeFileName || '选择一份简历文件'}</h2>
-                <p>支持 PDF、DOC、DOCX。文件只在本次体验中选择，不会上传至网络。</p>
-                <button
-                  className="button button-primary"
-                  onClick={() => resumeInput.current?.click()}
-                >
-                  <Upload size={16} />
-                  选择文件
-                </button>
-                <div className="upload-limit">
-                  <ShieldCheck size={14} /> 当前版本尚未实现文件解析或持久化存储
-                </div>
-              </div>
-              <div className="section-title upload-next">
-                <div>
-                  <h2>下一步</h2>
-                  <p>上传功能接入后，Agent 将先展示识别结果供你校对。</p>
-                </div>
-              </div>
-              <div className="upload-steps">
-                <div>
-                  <span>01</span>
-                  <strong>解析简历结构</strong>
-                  <small>提取教育、经历、技能等信息</small>
-                </div>
-                <div>
-                  <span>02</span>
-                  <strong>校对识别结果</strong>
-                  <small>修正错漏，保留真实经历</small>
-                </div>
-                <div>
-                  <span>03</span>
-                  <strong>用于岗位分析</strong>
-                  <small>按单个岗位生成匹配依据</small>
-                </div>
-              </div>
-            </section>
+            <ResumeUpload
+              workspace={workspace}
+              resume={resume}
+              busy={resumeBusy}
+              setBusy={setResumeBusy}
+              drafts={reviewDrafts}
+              setDraft={(id, draft) => setReviewDrafts((current) => ({ ...current, [id]: draft }))}
+              activeId={reviewDocumentId}
+              setActiveId={setReviewDocumentId}
+              onWorkspace={setWorkspace}
+              onConfirmed={(saved) => {
+                setWorkspace(saved)
+                setResume(saved.resume)
+                setSavedResume(true)
+                setToast('校对结果已写入简历，并保存为新版本。')
+              }}
+            />
           )}
 
           {page === 'settings' && (
@@ -1072,12 +1098,15 @@ function App(): ReactNode {
                 <div className="section-title">
                   <div>
                     <h2>本地数据</h2>
-                    <p>备份包含企业岗位、简历资料与历史版本、投递意向记录，请妥善保管文件。</p>
+                    <p>
+                      备份包含企业岗位、简历资料与历史版本、简历原文件及校对记录、投递意向，请妥善保管。
+                    </p>
                   </div>
                 </div>
                 <div className="data-actions">
                   <button
                     className="button button-secondary"
+                    disabled={!dataReady || resumeBusy}
                     onClick={async () => {
                       try {
                         if (await dataAPI.backup()) setToast('本地数据已备份。')
@@ -1090,7 +1119,7 @@ function App(): ReactNode {
                   </button>
                   <button
                     className="button button-secondary"
-                    disabled={!dataReady}
+                    disabled={!dataReady || resumeBusy}
                     onClick={async () => {
                       if (
                         !window.confirm(
@@ -1104,6 +1133,8 @@ function App(): ReactNode {
                         setWorkspace(restored)
                         setCompanies(restored.companies)
                         setResume(restored.resume)
+                        setReviewDrafts({})
+                        setReviewDocumentId('')
                         setDataReady(true)
                         setSavedResume(true)
                         setToast('数据已恢复。')

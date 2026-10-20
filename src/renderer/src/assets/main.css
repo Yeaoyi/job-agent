@@ -1,5 +1,246 @@
 @import './base.css';
 
+.resume-upload-page {
+  max-width: 1240px;
+}
+.resume-format-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+.resume-error,
+.resume-progress {
+  padding: 13px 16px;
+  margin: 16px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.resume-error {
+  border-left: 3px solid var(--text);
+}
+.resume-spinner {
+  animation: resume-spin 1s linear infinite;
+}
+@keyframes resume-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.resume-document-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 24px 0;
+}
+.resume-document {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+}
+.resume-document.is-active {
+  border-color: var(--text-soft);
+  background: var(--accent-faint);
+}
+.resume-document > span:first-of-type {
+  min-width: 0;
+}
+.resume-document strong {
+  display: block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.resume-document small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+.resume-status {
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: var(--text-soft);
+  font-size: 10px;
+}
+.resume-review-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.resume-review-heading h2 {
+  font-size: 16px;
+  margin: 0 0 5px;
+}
+.resume-review-heading p {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+.resume-warnings {
+  padding: 10px 15px;
+  margin-bottom: 18px;
+  background: var(--accent-faint);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.resume-warnings p {
+  margin: 4px 0;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+.resume-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.resume-source,
+.resume-review-fields {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.resume-source {
+  position: sticky;
+  top: 0;
+}
+.resume-pane-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.resume-pane-heading h3 {
+  margin: 0;
+  font-size: 13px;
+}
+.resume-pane-heading > span {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.resume-source pre {
+  margin: 0;
+  padding: 20px;
+  min-height: 300px;
+  max-height: 65vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.9;
+  color: var(--text-soft);
+  user-select: text;
+}
+.resume-review-field {
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.resume-review-field:last-child {
+  border-bottom: 0;
+}
+.resume-field-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.resume-field-check input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+.resume-field-check small {
+  color: var(--text-muted);
+  font-size: 10px;
+  margin-left: auto;
+}
+.resume-review-field > input,
+.resume-review-field textarea {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+  color: var(--text);
+  line-height: 1.7;
+}
+.resume-review-field textarea {
+  resize: vertical;
+  min-height: 75px;
+}
+.resume-current {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.resume-current summary {
+  cursor: pointer;
+}
+.resume-current p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 140px;
+  overflow: auto;
+}
+.resume-confirm-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.resume-confirm-bar > span {
+  color: var(--text-soft);
+  font-size: 11px;
+}
+@media (max-width: 1100px) {
+  .resume-review-grid {
+    gap: 12px;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  }
+  .resume-confirm-bar {
+    flex-wrap: wrap;
+  }
+  .resume-review-heading {
+    align-items: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .resume-spinner {
+    animation: none;
+  }
+}
+
 #root {
   width: 100%;
   height: 100%;
@@ -287,8 +528,22 @@
 .state-dot {
   width: 6px;
   height: 6px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--agent-status-color, var(--status-loading));
+  transition: background-color 180ms ease;
+}
+[data-agent-status='ready'] {
+  --agent-status-color: var(--status-ready);
+}
+[data-agent-status='error'] {
+  --agent-status-color: var(--status-error);
+}
+[data-agent-status='loading'] {
+  --agent-status-color: var(--status-loading);
+}
+.agent-state[data-agent-status='error'] {
+  color: var(--status-error);
 }
 .main-panel {
   display: flex;
@@ -324,6 +579,12 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-shrink: 0;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 .agent-state {
   display: flex;

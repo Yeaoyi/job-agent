@@ -7,6 +7,13 @@ const api: WorkspaceAPI = {
   load: (legacy) => ipcRenderer.invoke('workspace:load', legacy),
   saveCompanies: (companies) => ipcRenderer.invoke('workspace:save-companies', companies),
   saveResume: (resume) => ipcRenderer.invoke('workspace:save-resume', resume),
+  importResume: () => ipcRenderer.invoke('resume:import'),
+  saveResumeReview: (id, fields, selected) =>
+    ipcRenderer.invoke('resume:save-review', id, fields, selected),
+  confirmResumeReview: (id, fields, selected, currentDraft) =>
+    ipcRenderer.invoke('resume:confirm-review', id, fields, selected, currentDraft),
+  openResumeOriginal: (id) => ipcRenderer.invoke('resume:open-original', id),
+  deleteResumeDocument: (id) => ipcRenderer.invoke('resume:delete', id),
   addIntent: (companyId, jobId) => ipcRenderer.invoke('workspace:add-intent', companyId, jobId),
   backup: () => ipcRenderer.invoke('workspace:backup'),
   restore: () => ipcRenderer.invoke('workspace:restore')
